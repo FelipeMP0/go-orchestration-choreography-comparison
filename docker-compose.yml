@@ -1,0 +1,17 @@
+version: "3.7"
+services:
+  service1:
+    container_name: service1
+    build: .
+    depends_on: 
+      - activemq-artemis
+  
+  activemq-artemis:
+    container_name: activemq-artemis
+    image: vromero/activemq-artemis:2.15.0-alpine
+    environment:
+      ARTEMIS_USERNAME: user-amq
+      ARTEMIS_PASSWORD: password-amq
+    ports:
+      - 8161:8161
+      - 61616:61616
