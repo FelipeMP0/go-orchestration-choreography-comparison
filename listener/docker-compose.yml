@@ -1,7 +1,7 @@
 version: "3.7"
 services:
-  service1:
-    container_name: service1
+  listener:
+    container_name: listener
     build: .
     depends_on: 
       - activemq-artemis
