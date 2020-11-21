@@ -32,7 +32,7 @@ func main() {
 	ctx := context.Background()
 
 	receiver, err := session.NewReceiver(
-		amqp.LinkSourceAddress("/example-queue"),
+		amqp.LinkSourceAddress("/test1/queues/test2"),
 		amqp.LinkCredit(10))
 
 	if err != nil {
