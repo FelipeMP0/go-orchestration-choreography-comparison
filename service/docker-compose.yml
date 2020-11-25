@@ -1,0 +1,22 @@
+version: "3.7"
+services:
+  microservice1:
+    container_name: microservice1
+    build: .
+    environment: 
+      MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
+    depends_on: 
+      - mongodb
+  
+  mongodb:
+    container_name: mongodb
+    image: mongo:4.4.2
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+    - "27017:27017"
+
+networks: 
+  default:
+    name: "default_network"
