@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/config"
 	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/datastore"
 	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/listener"
 	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/models"
+	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/sender"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -18,7 +22,11 @@ type App struct {
 	dbClient              *mongo.Client
 	ServiceStateDatastore *datastore.ServiceStateDatastore
 	AmqpListener          *listener.AMQPListener
+	AmqpSender            *sender.AMQPSender
 }
+
+var stateID primitive.ObjectID
+var collectionName string
 
 // Start initializes the application.
 func (app *App) Start() {
@@ -28,6 +36,11 @@ func (app *App) Start() {
 	configuration := config.ReadConfiguration()
 	log.Println("Loaded configuration:", configuration)
 
+	stateID = primitive.NewObjectID()
+	collectionName = datastore.GenerateCollectionName(configuration.ApplicationIndex)
+
+	initServiceState(app)
+
 	listenerConfiguration := buildListenerConfiguration(configuration)
 	log.Println("Listener configuration:", listenerConfiguration)
 
@@ -36,9 +49,12 @@ func (app *App) Start() {
 	var wg sync.WaitGroup
 
 	wg.Add(1)
+
 	go app.AmqpListener.StartListener(listenerConfiguration, amqpMessagesChannel, &wg)
-	go processServiceMessages(amqpMessagesChannel)
+	go processServiceMessages(amqpMessagesChannel, app, configuration)
+
 	log.Println("Initialization complete")
+
 	wg.Wait()
 }
 
@@ -46,18 +62,63 @@ func (app *App) Start() {
 func NewApp(
 	dbClient *mongo.Client,
 	serviceStateDatastore *datastore.ServiceStateDatastore,
-	amqpListner *listener.AMQPListener) *App {
+	amqpListener *listener.AMQPListener,
+	amqpSender *sender.AMQPSender) *App {
 	return &App{
 		dbClient:              dbClient,
 		ServiceStateDatastore: serviceStateDatastore,
-		AmqpListener:          amqpListner,
+		AmqpListener:          amqpListener,
+		AmqpSender:            amqpSender,
 	}
 }
 
-func processServiceMessages(c <-chan models.ServiceMessage) {
+func processServiceMessages(c <-chan models.ServiceMessage, app *App, config config.Configuration) {
+	applicationIndex := config.ApplicationIndex
+	senderConfiguration := buildSenderConfiguration(config)
 	for value := range c {
-		log.Println(value)
+		switch value.ApplicationIndex {
+		case applicationIndex - 1:
+			if !forceFail() {
+				log.Println("Updating service state")
+				update := bson.D{{"$set", bson.D{{"state", value.ServiceState}}}}
+				app.ServiceStateDatastore.UpdateByID(context.TODO(), collectionName, stateID, update)
+				queueName := fmt.Sprintf("/microservice_%d_queue", applicationIndex+1)
+				serviceMessage := models.ServiceMessage{
+					ApplicationIndex: applicationIndex,
+					ServiceState:     "S2",
+				}
+				app.AmqpSender.Send(senderConfiguration, queueName, serviceMessage)
+			} else {
+				log.Println("Rolling back service state")
+				sendFailureMessage(app, senderConfiguration, applicationIndex)
+			}
+		case applicationIndex + 1:
+			if value.ServiceState == "FAILURE" {
+				log.Println("Received message to roll back service state")
+				update := bson.D{{"$set", bson.D{{"state", "S1"}}}}
+				app.ServiceStateDatastore.UpdateByID(context.TODO(), collectionName, stateID, update)
+				sendFailureMessage(app, senderConfiguration, applicationIndex)
+			}
+		}
 	}
+}
+
+func sendFailureMessage(app *App, senderConfiguration sender.Configuration, applicationIndex int) {
+	queueName := fmt.Sprintf("/microservice_%d_queue", applicationIndex-1)
+	serviceMessage := models.ServiceMessage{
+		ApplicationIndex: applicationIndex,
+		ServiceState:     "FAILURE",
+	}
+	app.AmqpSender.Send(senderConfiguration, queueName, serviceMessage)
+}
+
+func initServiceState(app *App) {
+	serviceState := models.ServiceState{
+		ID:    stateID,
+		State: "S1",
+	}
+
+	app.ServiceStateDatastore.Create(context.TODO(), collectionName, &serviceState)
 }
 
 func buildListenerConfiguration(config config.Configuration) listener.Configuration {
@@ -69,4 +130,19 @@ func buildListenerConfiguration(config config.Configuration) listener.Configurat
 		Password:  config.AmqpServerConfiguration.Password,
 		QueueName: queueName,
 	}
+}
+
+func buildSenderConfiguration(config config.Configuration) sender.Configuration {
+	return sender.Configuration{
+		Host:     config.AmqpServerConfiguration.Host,
+		Port:     config.AmqpServerConfiguration.Port,
+		Username: config.AmqpServerConfiguration.Username,
+		Password: config.AmqpServerConfiguration.Password,
+	}
+}
+
+func forceFail() bool {
+	log.Println("Force fail:", os.Getenv("FORCE_FAIL"))
+	log.Println(os.Getenv("FORCE_FAIL") == "true")
+	return os.Getenv("FORCE_FAIL") == "true"
 }

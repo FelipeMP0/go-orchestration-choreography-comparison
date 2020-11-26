@@ -8,6 +8,7 @@ package app
 import (
 	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/datastore"
 	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/listener"
+	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/sender"
 )
 
 // Injectors from wire.go:
@@ -17,6 +18,7 @@ func Initialize() *App {
 	database := datastore.NewDatabase(client)
 	serviceStateDatastore := datastore.NewServiceStateDatastore(database)
 	amqpListener := listener.NewAMQPListener()
-	app := NewApp(client, serviceStateDatastore, amqpListener)
+	amqpSender := sender.NewAMQPSender()
+	app := NewApp(client, serviceStateDatastore, amqpListener, amqpSender)
 	return app
 }
