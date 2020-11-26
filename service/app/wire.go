@@ -4,10 +4,16 @@ package app
 
 import (
 	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/datastore"
+	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/listener"
 	"github.com/google/wire"
 )
 
 func Initialize() *App {
-	wire.Build(NewApp, datastore.NewMongoClient, datastore.NewDatabase, datastore.WireSet)
+	wire.Build(
+		NewApp,
+		datastore.NewMongoClient,
+		datastore.NewDatabase,
+		datastore.WireSet,
+		listener.NewAMQPListener)
 	return &App{}
 }

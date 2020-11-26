@@ -7,8 +7,13 @@ services:
       MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
     depends_on: 
       - mongodb
+    volumes:
+      - ./microservices_configuration/config_index1.json:/microservices_configuration/config.json
+    depends_on: 
+      - activemq-artemis
+      - mongodb1
   
-  mongodb:
+  mongodb1:
     container_name: mongodb
     image: mongo:4.4.2
     environment:
@@ -16,6 +21,16 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: password
     ports:
     - "27017:27017"
+
+  activemq-artemis:
+    container_name: activemq-artemis
+    image: vromero/activemq-artemis:2.15.0-alpine
+    environment:
+      ARTEMIS_USERNAME: user-amq
+      ARTEMIS_PASSWORD: password-amq
+    ports:
+      - 8161:8161
+      - 61616:61616
 
 networks: 
   default:

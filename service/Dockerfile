@@ -19,7 +19,7 @@ WORKDIR /dist
 
 RUN cp /build/main .
 
-FROM golang:1.14.11-alpine3.11
+FROM scratch
 
 COPY --from=builder /dist/main /
 

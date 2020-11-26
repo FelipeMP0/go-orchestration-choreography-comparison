@@ -12,7 +12,6 @@ func main() {
 	log.Println("Listener started")
 
 	time.Sleep(10 * time.Second)
-	log.Println("Waited 10 seconds")
 
 	client, err := amqp.Dial("amqp://activemq-artemis:61616",
 		amqp.ConnSASLPlain("user-amq", "password-amq"))
@@ -32,7 +31,7 @@ func main() {
 	ctx := context.Background()
 
 	receiver, err := session.NewReceiver(
-		amqp.LinkSourceAddress("/test1/queues/test2"),
+		amqp.LinkSourceAddress("fila"),
 		amqp.LinkCredit(10))
 
 	if err != nil {
