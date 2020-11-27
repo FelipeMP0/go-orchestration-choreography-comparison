@@ -1,0 +1,11 @@
+version: "3.7"
+services:
+  orchestrator:
+    container_name: orchestrator
+    build: .
+    volumes:
+      - ./orchestrator_configuration/config.json:/orchestrator_configuration/config.json
+
+networks: 
+  default:
+    name: "default_network"

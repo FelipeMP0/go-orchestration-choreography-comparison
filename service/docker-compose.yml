@@ -42,75 +42,75 @@ services:
       - activemq-artemis
       - mongodb1
 
-  microservice4:
-    container_name: microservice4
-    build: .
-    environment: 
-      MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
-      FORCE_FAIL: "false"
-    depends_on: 
-      - mongodb
-    volumes:
-      - ./microservices_configuration/config_index4.json:/microservices_configuration/config.json
-    depends_on: 
-      - activemq-artemis
-      - mongodb1
+  # microservice4:
+  #   container_name: microservice4
+  #   build: .
+  #   environment: 
+  #     MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
+  #     FORCE_FAIL: "false"
+  #   depends_on: 
+  #     - mongodb
+  #   volumes:
+  #     - ./microservices_configuration/config_index4.json:/microservices_configuration/config.json
+  #   depends_on: 
+  #     - activemq-artemis
+  #     - mongodb1
   
-  microservice5:
-    container_name: microservice5
-    build: .
-    environment: 
-      MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
-      FORCE_FAIL: "false"
-    depends_on: 
-      - mongodb
-    volumes:
-      - ./microservices_configuration/config_index5.json:/microservices_configuration/config.json
-    depends_on: 
-      - activemq-artemis
-      - mongodb1
+  # microservice5:
+  #   container_name: microservice5
+  #   build: .
+  #   environment: 
+  #     MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
+  #     FORCE_FAIL: "false"
+  #   depends_on: 
+  #     - mongodb
+  #   volumes:
+  #     - ./microservices_configuration/config_index5.json:/microservices_configuration/config.json
+  #   depends_on: 
+  #     - activemq-artemis
+  #     - mongodb1
 
-  microservice6:
-    container_name: microservice6
-    build: .
-    environment: 
-      MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
-      FORCE_FAIL: "false"
-    depends_on: 
-      - mongodb
-    volumes:
-      - ./microservices_configuration/config_index6.json:/microservices_configuration/config.json
-    depends_on: 
-      - activemq-artemis
-      - mongodb1
+  # microservice6:
+  #   container_name: microservice6
+  #   build: .
+  #   environment: 
+  #     MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
+  #     FORCE_FAIL: "false"
+  #   depends_on: 
+  #     - mongodb
+  #   volumes:
+  #     - ./microservices_configuration/config_index6.json:/microservices_configuration/config.json
+  #   depends_on: 
+  #     - activemq-artemis
+  #     - mongodb1
   
-  microservice7:
-    container_name: microservice7
-    build: .
-    environment: 
-      MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
-      FORCE_FAIL: "false"
-    depends_on: 
-      - mongodb
-    volumes:
-      - ./microservices_configuration/config_index7.json:/microservices_configuration/config.json
-    depends_on: 
-      - activemq-artemis
-      - mongodb1
+  # microservice7:
+  #   container_name: microservice7
+  #   build: .
+  #   environment: 
+  #     MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
+  #     FORCE_FAIL: "false"
+  #   depends_on: 
+  #     - mongodb
+  #   volumes:
+  #     - ./microservices_configuration/config_index7.json:/microservices_configuration/config.json
+  #   depends_on: 
+  #     - activemq-artemis
+  #     - mongodb1
 
-  microservice8:
-    container_name: microservice8
-    build: .
-    environment: 
-      MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
-      FORCE_FAIL: "true"
-    depends_on: 
-      - mongodb
-    volumes:
-      - ./microservices_configuration/config_index8.json:/microservices_configuration/config.json
-    depends_on: 
-      - activemq-artemis
-      - mongodb1
+  # microservice8:
+  #   container_name: microservice8
+  #   build: .
+  #   environment: 
+  #     MONGO_CONNECTION_STRING: "mongodb://root:password@mongodb:27017"
+  #     FORCE_FAIL: "true"
+  #   depends_on: 
+  #     - mongodb
+  #   volumes:
+  #     - ./microservices_configuration/config_index8.json:/microservices_configuration/config.json
+  #   depends_on: 
+  #     - activemq-artemis
+  #     - mongodb1
 
   mongodb1:
     container_name: mongodb

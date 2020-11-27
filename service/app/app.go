@@ -78,6 +78,31 @@ func processServiceMessages(c <-chan models.ServiceMessage, app *App, config con
 	senderConfiguration := buildSenderConfiguration(config)
 	for value := range c {
 		switch value.ApplicationIndex {
+		case 0:
+			log.Println("Success Start time: ", time.Now().UnixNano())
+			if value.ServiceState == "FAILURE" {
+				log.Println("Received message to roll back service state")
+				update := bson.D{{"$set", bson.D{{"state", "S1"}}}}
+				app.ServiceStateDatastore.UpdateByID(context.TODO(), collectionName, stateID, update)
+				sendFailureMessage(app, senderConfiguration, applicationIndex)
+				log.Println("Failure End time: ", time.Now().UnixNano())
+			} else {
+				if !forceFail() {
+					log.Println("Updating service state")
+					update := bson.D{{"$set", bson.D{{"state", value.ServiceState}}}}
+					app.ServiceStateDatastore.UpdateByID(context.TODO(), collectionName, stateID, update)
+					queueName := fmt.Sprintf("/microservice_%d_queue_orchestrator", applicationIndex)
+					serviceMessage := models.ServiceMessage{
+						ApplicationIndex: applicationIndex,
+						ServiceState:     "SUCCESS",
+					}
+					app.AmqpSender.Send(senderConfiguration, queueName, serviceMessage)
+				} else {
+					log.Println("Rolling back service state")
+					sendFailureMessage(app, senderConfiguration, applicationIndex)
+				}
+				log.Println("Success End time: ", time.Now().UnixNano())
+			}
 		case applicationIndex - 1:
 			log.Println("Success Start time: ", time.Now().UnixNano())
 			if !forceFail() {
@@ -109,7 +134,7 @@ func processServiceMessages(c <-chan models.ServiceMessage, app *App, config con
 }
 
 func sendFailureMessage(app *App, senderConfiguration sender.Configuration, applicationIndex int) {
-	queueName := fmt.Sprintf("/microservice_%d_queue", applicationIndex-1)
+	queueName := fmt.Sprintf("/microservice_%d_queue_orchestrator", applicationIndex-1)
 	serviceMessage := models.ServiceMessage{
 		ApplicationIndex: applicationIndex,
 		ServiceState:     "FAILURE",
