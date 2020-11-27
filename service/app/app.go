@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/config"
 	"github.com/FelipeMP0/go-orchestration-choreography-comparison/service/v2/datastore"
@@ -78,6 +79,7 @@ func processServiceMessages(c <-chan models.ServiceMessage, app *App, config con
 	for value := range c {
 		switch value.ApplicationIndex {
 		case applicationIndex - 1:
+			log.Println("Success Start time: ", time.Now().UnixNano())
 			if !forceFail() {
 				log.Println("Updating service state")
 				update := bson.D{{"$set", bson.D{{"state", value.ServiceState}}}}
@@ -92,13 +94,16 @@ func processServiceMessages(c <-chan models.ServiceMessage, app *App, config con
 				log.Println("Rolling back service state")
 				sendFailureMessage(app, senderConfiguration, applicationIndex)
 			}
+			log.Println("Success End time: ", time.Now().UnixNano())
 		case applicationIndex + 1:
+			log.Println("Failure Start time: ", time.Now().UnixNano())
 			if value.ServiceState == "FAILURE" {
 				log.Println("Received message to roll back service state")
 				update := bson.D{{"$set", bson.D{{"state", "S1"}}}}
 				app.ServiceStateDatastore.UpdateByID(context.TODO(), collectionName, stateID, update)
 				sendFailureMessage(app, senderConfiguration, applicationIndex)
 			}
+			log.Println("Failure End time: ", time.Now().UnixNano())
 		}
 	}
 }

@@ -1,0 +1,9 @@
+{
+  "ApplicationIndex": 6,
+  "AmqpServerConfiguration": {
+    "Host": "activemq-artemis",
+    "Port": 61616,
+    "Username": "user-amq",
+    "Password": "password-amq"
+  }
+}
